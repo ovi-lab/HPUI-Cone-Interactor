@@ -109,7 +109,11 @@ namespace ubco.ovilab.HPUI.Cone
 
             if (raycastDataRecords.Count > 0)
             {
-                currentInteractionData.Add(new RaycastDataRecordsContainer(raycastDataRecords, closestSide, closestJoint));
+                currentInteractionData.Add(new RaycastDataRecordsContainer(
+                    raycastDataRecords,
+                    closestSide,
+                    closestJoint,
+                    Time.realtimeSinceStartupAsDouble));
             }
         }
 

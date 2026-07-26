@@ -17,7 +17,10 @@ namespace ubco.ovilab.HPUI.Cone
     /// <remarks>
     /// Behavior summary:
     /// - Only rays marked as selection are considered.
-    /// - A ray must appear in at least MinRayInteractionsThreshold fraction of total frames to be included.
+    /// - Gestures longer than LongGestureThresholdSeconds use all collected frames.
+    /// - Shorter gestures use a ShortGestureWindowSeconds window centered on the frame containing the shortest
+    ///   selection-ray distance.
+    /// - A ray must appear in at least MinRayInteractionsThreshold fraction of the selected frames to be included.
     /// - When EstimateTechnique is Average the mean of the collected distances is used; when Percentile the configured
     ///   Percentile (0.0-1.0) is used (interpolated percentile).
     /// - The per-ray distance is multiplied by Multiplier before being stored in the output.
@@ -27,6 +30,8 @@ namespace ubco.ovilab.HPUI.Cone
     ///   method returns an empty list (and emits a warning in the original implementation when appropriate).
     /// </remarks>
     /// <seealso cref="Estimate"/>
+    /// <seealso cref="LongGestureThresholdSeconds"/>
+    /// <seealso cref="ShortGestureWindowSeconds"/>
     /// <seealso cref="MinRayInteractionsThreshold"/>
     /// <seealso cref="Percentile"/>
     /// <seealso cref="Multiplier"/>
@@ -48,6 +53,32 @@ namespace ubco.ovilab.HPUI.Cone
             /// percentile distance from all the data collected.
             /// </summary>
             Percentile
+        }
+
+        [SerializeField, Min(0f)]
+        [Tooltip("Gestures longer than this duration use all frames. Shorter gestures use a window around the closest frame.")]
+        private float longGestureThresholdSeconds = 0.4f;
+
+        /// <summary>
+        /// Gets or sets the gesture duration above which all collected frames are analyzed.
+        /// </summary>
+        public float LongGestureThresholdSeconds
+        {
+            get => longGestureThresholdSeconds;
+            set => longGestureThresholdSeconds = Mathf.Max(0f, value);
+        }
+
+        [SerializeField, Min(0f)]
+        [Tooltip("For a short gesture, the duration of the window centered on the frame with the shortest selection distance.")]
+        private float shortGestureWindowSeconds = 0.2f;
+
+        /// <summary>
+        /// Gets or sets the duration of the frame window analyzed for short gestures.
+        /// </summary>
+        public float ShortGestureWindowSeconds
+        {
+            get => shortGestureWindowSeconds;
+            set => shortGestureWindowSeconds = Mathf.Max(0f, value);
         }
 
         [SerializeField, Tooltip("The statistical estimate to use.")]
@@ -134,7 +165,6 @@ namespace ubco.ovilab.HPUI.Cone
         List<HPUIInteractorRayAngle> IConeRaySegmentComputation.EstimateConeAnglesForSegment(HPUIInteractorConeRayAngleSegment segment, IEnumerable<ConeRayComputationDataRecord> interactionRecords)
         {
             Dictionary<(float, float), float> averageRayDistance = new();
-            // For each interaction, get the frame with the shortest distance
             bool atLeastOneRayAnalyzed = false;
 
             // Collect all the distances for a given ray, defined by the x and z angles
@@ -146,8 +176,10 @@ namespace ubco.ovilab.HPUI.Cone
             {
                 if (interactionRecord.segment == segment)
                 {
-                    // for each frame in all the frames collected in a gesture
-                    foreach (var frame in interactionRecord.records)
+                    List<RaycastDataRecordsContainer> framesToAnalyze = GetFramesToAnalyze(interactionRecord.records);
+
+                    // for each frame selected from all the frames collected in a gesture
+                    foreach (var frame in framesToAnalyze)
                     {
                         // for each ray in a given frame
                         foreach (var ray in frame.raycastDataRecordsList)
@@ -169,7 +201,7 @@ namespace ubco.ovilab.HPUI.Cone
                             rayDistances[(ray.angleX, ray.angleZ)].Add(ray.distance);
                         }
                     }
-                    totalInteractionRecords += interactionRecord.records.Count;
+                    totalInteractionRecords += framesToAnalyze.Count;
                 }
             }
 
@@ -214,6 +246,49 @@ namespace ubco.ovilab.HPUI.Cone
             }
 
             return coneAnglesForSegment;
+        }
+
+        private List<RaycastDataRecordsContainer> GetFramesToAnalyze(List<RaycastDataRecordsContainer> frames)
+        {
+            if (frames == null || frames.Count == 0)
+            {
+                return new List<RaycastDataRecordsContainer>();
+            }
+
+            double gestureDurationSeconds = frames.Max(frame => frame.timestampSeconds) - frames.Min(frame => frame.timestampSeconds);
+            if (gestureDurationSeconds > LongGestureThresholdSeconds)
+            {
+                return frames;
+            }
+
+            var closestFrame = frames
+                .Select(frame => new
+                {
+                    frame,
+                    selectionDistances = frame.raycastDataRecordsList
+                        .Where(ray => ray.isSelection)
+                        .Select(ray => ray.distance)
+                })
+                .Where(candidate => candidate.selectionDistances.Any())
+                .Select(candidate => new
+                {
+                    candidate.frame,
+                    distance = candidate.selectionDistances.Min()
+                })
+                .OrderBy(candidate => candidate.distance)
+                .FirstOrDefault();
+
+            // There are no usable rays to center a window on. Returning all frames preserves the
+            // statistical implementation's empty-result behavior.
+            if (closestFrame == null)
+            {
+                return frames;
+            }
+
+            double halfWindowSeconds = ShortGestureWindowSeconds / 2d;
+            return frames
+                .Where(frame => Math.Abs(frame.timestampSeconds - closestFrame.frame.timestampSeconds) <= halfWindowSeconds)
+                .ToList();
         }
     }
 

@@ -32,9 +32,10 @@ namespace ubco.ovilab.HPUI.Cone
     }
 
     /// <summary>
-    /// Container for a list of <see cref="HPUIRayCastDetectionBaseLogic.RaycastDataRecord"/> emited with
+    /// Container for a list of <see cref="HPUIRayCastDetectionBaseLogic.RaycastDataRecord"/> emitted with
     /// <see cref="HPUIRayCastDetectionBaseLogic.raycastData"/>. Also contains the closest
-    /// <see cref="FingerSide">side</see> and <see cref="XRHandJoint">joint</see>
+    /// <see cref="FingerSide">side</see> and <see cref="XRHandJoint">joint</see>, and the time at which the
+    /// frame was collected.
     /// </summary>
     public struct RaycastDataRecordsContainer
     {
@@ -42,11 +43,17 @@ namespace ubco.ovilab.HPUI.Cone
         public FingerSide fingerSide;
         public XRHandJointID handJointID;
 
-        public RaycastDataRecordsContainer(List<HPUIRayCastDetectionBaseLogic.RaycastDataRecord> raycastDataRecord, FingerSide fingerSide, XRHandJointID handJointID) : this()
+        /// <summary>
+        /// Unscaled real time, in seconds since application startup, at which this frame was collected.
+        /// </summary>
+        public double timestampSeconds;
+
+        public RaycastDataRecordsContainer(List<HPUIRayCastDetectionBaseLogic.RaycastDataRecord> raycastDataRecord, FingerSide fingerSide, XRHandJointID handJointID, double timestampSeconds) : this()
         {
             this.raycastDataRecordsList = raycastDataRecord;
             this.fingerSide = fingerSide;
             this.handJointID = handJointID;
+            this.timestampSeconds = timestampSeconds;
         }
     }
 }
