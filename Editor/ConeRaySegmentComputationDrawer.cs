@@ -3,17 +3,17 @@ using UnityEditor;
 
 namespace ubco.ovilab.HPUI.Cone.Editor
 {
-    [CustomPropertyDrawer(typeof(StatisticalConeRaySegmentComputation))]
-    public class StatisticalConeRaySegmentComputationDrawer : PropertyDrawer
+    [CustomPropertyDrawer(typeof(ConeRaySegmentComputation))]
+    public class ConeRaySegmentComputationDrawer : PropertyDrawer
     {
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            int lines = 6;
+            int lines = 8;
 
             // Show percentile only if EstimateTechnique is Percentile
             SerializedProperty estimateTechniqueProp = property.FindPropertyRelative("estimateTechnique");
-            if ((StatisticalConeRaySegmentComputation.Estimate)estimateTechniqueProp.enumValueIndex
-                 == StatisticalConeRaySegmentComputation.Estimate.Percentile)
+            if ((ConeRaySegmentComputation.Estimate)estimateTechniqueProp.enumValueIndex
+                 == ConeRaySegmentComputation.Estimate.Percentile)
             {
                 lines++; // show percentile
             }
@@ -26,6 +26,8 @@ namespace ubco.ovilab.HPUI.Cone.Editor
 
             Rect lineRect = new Rect(position.x, position.y, position.width, EditorGUIUtility.singleLineHeight);
 
+            SerializedProperty longGestureThresholdSecondsProp = property.FindPropertyRelative("longGestureThresholdSeconds");
+            SerializedProperty shortGestureWindowSecondsProp = property.FindPropertyRelative("shortGestureWindowSeconds");
             SerializedProperty estimateTechniqueProp = property.FindPropertyRelative("estimateTechnique");
             SerializedProperty minRayInteractionsThresholdProp = property.FindPropertyRelative("minRayInteractionsThreshold");
             SerializedProperty percentileProp = property.FindPropertyRelative("percentile");
@@ -35,10 +37,16 @@ namespace ubco.ovilab.HPUI.Cone.Editor
             SerializedProperty cullingDistanceThresholdNormalizedProp = property.FindPropertyRelative("cullingDistanceThresholdNormalized");
 
             lineRect.y += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
+            EditorGUI.PropertyField(lineRect, longGestureThresholdSecondsProp);
+
+            lineRect.y += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
+            EditorGUI.PropertyField(lineRect, shortGestureWindowSecondsProp);
+
+            lineRect.y += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
             EditorGUI.PropertyField(lineRect, estimateTechniqueProp);
 
-            if ((StatisticalConeRaySegmentComputation.Estimate)estimateTechniqueProp.enumValueIndex
-                == StatisticalConeRaySegmentComputation.Estimate.Percentile)
+            if ((ConeRaySegmentComputation.Estimate)estimateTechniqueProp.enumValueIndex
+                == ConeRaySegmentComputation.Estimate.Percentile)
             {
                 lineRect.y += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
                 EditorGUI.PropertyField(lineRect, percentileProp);

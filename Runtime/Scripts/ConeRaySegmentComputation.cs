@@ -38,7 +38,7 @@ namespace ubco.ovilab.HPUI.Cone
     /// <seealso cref="CullRaysByDistanceToCentroid"/>
     /// <seealso cref="CullingDistanceThresholdNormalized"/>
     [Serializable]
-    public class StatisticalConeRaySegmentComputation : IConeRaySegmentComputation
+    public class ConeRaySegmentComputation : IConeRaySegmentComputation
     {
         public enum Estimate
         {
