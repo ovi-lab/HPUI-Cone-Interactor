@@ -35,7 +35,7 @@ namespace ubco.ovilab.HPUI.Cone
             EstimatingConeRays,
 
             /// <summary>
-            /// The system is ready to start processing or re run estimate.
+            /// The system is ready to start a new collection or re-estimate existing data.
             /// </summary>
             ReadyAndHaveData,
 
@@ -94,15 +94,13 @@ namespace ubco.ovilab.HPUI.Cone
         public State CurrentState { get; private set; }
 
         /// <summary>
-        /// This event gets called after the asset has been generated and assigned to <see cref="GeneratedAsset"/>
+        /// Invoked after the estimated asset has been generated and assigned to <see cref="GeneratedAsset"/>.
         /// </summary>
         public UnityEvent OnConeAssetGenerated;
 
         /// <summary>
-        /// Initiate data collection. If this component was used to generate an asset, and
-        /// the detection logic is not a <see cref="HPUIFullRangeRayCastDetectionLogic"/>, the
-        /// HPUIInteractorFullRangeAngles before the asset was generated will be set as the
-        /// detection logic of the interactor.
+        /// Starts collecting raycast data. If the generated cone asset is currently being
+        /// used for detection, the detection logic saved before estimation is restored first.
         /// </summary>
         public void StartDataCollection()
         {
@@ -158,12 +156,11 @@ namespace ubco.ovilab.HPUI.Cone
         }
 
         /// <summary>
-        /// Stops the data collection and initiates the estimation. Once done, callback will be invoked with the estimated asset.
+        /// Stops data collection and starts asynchronous cone estimation.
+        /// The <see cref="OnConeAssetGenerated"/> event is invoked when estimation completes.
         /// </summary>
         /// <remarks>
-        /// This will unsubscribe to <see cref="HPUIInteractor.DetectionLogic"/>interactor.DetectionLogic</see>
-        /// and the <see cref="IHPUIInteractable.GestureEvent">GestureEvent</see> of each
-        /// interactable it is tracking.
+        /// The data collector unsubscribes from its raycast and gesture callbacks when collection stops.
         /// </remarks>
         public virtual void EndAndEstimate()
         {
@@ -221,7 +218,7 @@ namespace ubco.ovilab.HPUI.Cone
         }
 
         /// <summary>
-        /// Coroutine that does the actual work of <see cref="EstimateConeRayAngles"/>.
+        /// Performs cone estimation asynchronously and populates the generated asset.
         /// </summary>
         protected virtual IEnumerator EstimationCoroutine(HPUIInteractorConeRayAngles estimatedConeRayAngles, IEnumerable<ConeRayComputationDataRecord> dataRecords)
         {

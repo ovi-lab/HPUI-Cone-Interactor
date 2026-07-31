@@ -21,8 +21,8 @@ namespace ubco.ovilab.HPUI.Cone
         /// </summary>
         public FingerSide FallbackSide { get => fallbackSide; set => fallbackSide = value; }
 
-        // TODO: Cite source!
-        // These are computed based on data collected during studies
+        // These angle lists are populated from calibration data and may be generated
+        // by ConeRayEstimator.
         public List<HPUIInteractorConeRayAngleSides> IndexDistalAngles = new();
         public List<HPUIInteractorConeRayAngleSides> IndexIntermediateAngles = new();
         public List<HPUIInteractorConeRayAngleSides> IndexProximalAngles = new();
@@ -44,8 +44,8 @@ namespace ubco.ovilab.HPUI.Cone
         }
 
         /// <summary>
-        /// Force refresh the cache.
-        /// This needs to be called if the angles are updated after the asset is created/loaded.
+        /// Rebuilds the lookup cache from the serialized angle lists.
+        /// Call this after modifying the angle lists at runtime.
         /// </summary>
         public void RefreshCache()
         {
@@ -85,10 +85,10 @@ namespace ubco.ovilab.HPUI.Cone
         }
 
         /// <summary>
-        /// Get the corresponding list angles for a given joint and side.
-        /// If the there is not angles for a given side for the joint, the angles of
+        /// Gets the ray angles for a hand joint and finger side.
+        /// If no angles are configured for the requested side, the angles for
         /// <see cref="FallbackSide"/> will be returned if it exists.
-        /// Otherwise, this will return null.
+        /// Otherwise, this returns <c>null</c>.
         /// </summary>
         public IReadOnlyList<HPUIInteractorRayAngle> GetAngles(XRHandJointID joint, FingerSide side)
         {
@@ -121,7 +121,7 @@ namespace ubco.ovilab.HPUI.Cone
     {
         volar = 0,
         radial = 1
-        // NOTE ulnar and dorsal are not included
+        // Ulnar and dorsal sides are not currently supported.
     }
 
     [Serializable]

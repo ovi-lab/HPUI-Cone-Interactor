@@ -5,16 +5,17 @@ using UnityEngine;
 namespace ubco.ovilab.HPUI.Cone
 {
     /// <summary>
-    /// Data is collected by specifying which segment all data should be assigned to.
+    /// Collects calibration data while a target cone segment is selected manually.
     /// </summary>
     public class GuidedDataCollector : RaycastDataCollectorBase
     {
         [SerializeField]
-        [Tooltip("Phalange that the interactor is currently being calibrated for")]
+        [Tooltip("Cone segment currently being calibrated.")]
         private HPUIInteractorConeRayAngleSegment targetSegment;
 
         /// <summary>
-        /// Phalange that the interactor is currently being calibrated for
+        /// Gets or sets the cone segment to which newly collected calibration data is assigned.
+        /// When a custom calibration order is configured, the value must be included in that order.
         /// </summary>
         public HPUIInteractorConeRayAngleSegment TargetSegment
         {
@@ -40,32 +41,32 @@ namespace ubco.ovilab.HPUI.Cone
         }
 
         [SerializeField]
-        [Tooltip("Ensures that only one calibration data record is collected for each phalange. Disabling this will allow averaging over multiple calibrations per phalange")]
+        [Tooltip("Keep only one calibration record for each cone segment when enabled.")]
         private bool uniqueDataRecordPerPhalange = true;
 
         /// <summary>
-        /// Ensures that only one calibration data record is collected for each phalange. Disabling this will allow averaging over multiple calibrations per phalange
+        /// Gets or sets whether a new calibration replaces an existing record for the same segment.
+        /// When disabled, multiple records can be collected for a segment.
         /// </summary>
         public bool UniqueDataRecordPerPhalange { get => uniqueDataRecordPerPhalange; set => uniqueDataRecordPerPhalange = value; }
 
         [SerializeField]
-        [Tooltip("Defines a custom order of calibration. If auto-move to next phalange is enabled, the target segment will automatically move to the next segment when you pause data collection for the current segment.")]
+        [Tooltip("Optional order in which cone segments are calibrated.")]
         private List<HPUIInteractorConeRayAngleSegment> orderOfCalibration;
 
         /// <summary>
-        /// Defines a custom order of calibration. If auto-move
-        /// to next phalange is enabled, the target segment will
-        /// automatically move to the next segment when you pause
-        /// data collection for the current segment.
+        /// Gets the optional custom order used when stepping through calibration segments.
+        /// If the list is empty, all cone segments can be selected directly.
         /// </summary>
         public List<HPUIInteractorConeRayAngleSegment> OrderOfCalibration { get => orderOfCalibration; }
 
         private int currentPhalangeIndex;
 
         /// <summary>
-        /// This will create a <see cref="ConeRayComputationDataRecord"/> for the
-        /// segment passed as a parameter.
+        /// Stores the currently buffered samples as a <see cref="ConeRayComputationDataRecord"/>
+        /// for the specified segment and clears the sample buffer.
         /// </summary>
+        /// <param name="segment">The segment to associate with the buffered samples.</param>
         public void EndCalibrationForSegment(HPUIInteractorConeRayAngleSegment segment)
         {
             if (uniqueDataRecordPerPhalange)
@@ -86,9 +87,8 @@ namespace ubco.ovilab.HPUI.Cone
         }
 
         /// <summary>
-        /// This will create a <see cref="ConeRayComputationDataRecord"/> for the
-        /// current <see cref="TargetSegment"/>. Also pauses the data collector
-        /// to adjust target segment for the next data record.
+        /// Stores the buffered samples for the current <see cref="TargetSegment"/>
+        /// and pauses collection until it is resumed for the next segment.
         /// </summary>
         public void EndDataCollectionForTargetSegment()
         {
@@ -97,14 +97,19 @@ namespace ubco.ovilab.HPUI.Cone
         }
 
         /// <summary>
-        /// Resumes data collection. To be used after
-        /// `EndDataCollectionForTargetSegment`
+        /// Resumes collection after <see cref="EndDataCollectionForTargetSegment"/>
+        /// has completed the current segment.
         /// </summary>
         public void StartDataCollectionForNextTargetSegment()
         {
             PauseDataCollection = false;
         }
 
+        /// <summary>
+        /// Moves the target to another entry in <see cref="OrderOfCalibration"/>
+        /// using modular indexing, allowing forward or backward steps.
+        /// </summary>
+        /// <param name="stepCount">The number of entries to move.</param>
         public void StepThroughCustomPhalanges(int stepCount = 1)
         {
             currentPhalangeIndex = (currentPhalangeIndex + stepCount) % OrderOfCalibration.Count;
@@ -116,6 +121,11 @@ namespace ubco.ovilab.HPUI.Cone
             TargetSegment = currentTargetSegment;
         }
 
+        /// <summary>
+        /// Moves the target through the complete <see cref="HPUIInteractorConeRayAngleSegment"/>
+        /// enumeration, wrapping at either end.
+        /// </summary>
+        /// <param name="stepCount">The number of segments to move.</param>
         public void StepThroughAllPhalanges(int stepCount = 1)
         {
             int phalangeCount = Enum.GetNames(typeof(HPUIInteractorConeRayAngleSegment)).Length;

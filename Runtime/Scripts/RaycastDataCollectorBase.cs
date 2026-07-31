@@ -8,8 +8,8 @@ using UnityEngine.XR.Hands;
 namespace ubco.ovilab.HPUI.Cone
 {
     /// <summary>
-    /// Base class for collecting data. Implementing classes are expected to appropriately
-    /// populate <see cref="DataRecords"/>.
+    /// Base class for collecting full-range raycast data. Derived collectors populate
+    /// <see cref="DataRecords"/> from frames received during gesture interactions.
     /// </summary>
     /// <remarks>
     /// The interactor used is expected to be configured with a <see cref="HPUIFullRangeRayCastDetectionLogic"/>
@@ -35,13 +35,13 @@ namespace ubco.ovilab.HPUI.Cone
         public HPUIConeRayCastDetectionLogic.ClosestJointAndSideEstimator ClosestJointAndSideEstimator { get => closestJointAndSideEstimator; set => closestJointAndSideEstimator = value; }
 
         /// <summary>
-        /// The flag indicating if data collection is active.
+        /// Indicates whether raycast data collection is active.
         /// </summary>
         public bool CollectingData { get; protected set; }
 
         /// <summary>
-        /// The flag indicating if data collection is paused.
-        /// This will inhibit <see cref="RaycastDataCallback"/>
+        /// Indicates whether incoming raycast frames are temporarily ignored.
+        /// When <c>true</c>, <see cref="RaycastDataCallback"/> does not record frames.
         /// </summary>
         public bool PauseDataCollection { get; set; }
 
@@ -52,10 +52,7 @@ namespace ubco.ovilab.HPUI.Cone
         public List<ConeRayComputationDataRecord> DataRecords { get; protected set; }
 
         /// <summary>
-        /// This initiates the data collection process.
-        /// This will subscribe to <see cref="HPUIInteractor.DetectionLogic"/>interactor.DetectionLogic</see>
-        /// and the <see cref="IHPUIInteractable.GestureEvent">GestureEvent</see> of each
-        /// interactable in interactableSegmentPairs.
+        /// Starts data collection and subscribes to the configured full-range raycast event.
         /// </summary>
         public virtual bool StartDataCollection()
         {
@@ -118,7 +115,7 @@ namespace ubco.ovilab.HPUI.Cone
         }
 
         /// <summary>
-        /// This terminates the data collection process and unsubscribe relevant callbacks.
+        /// Stops data collection and unsubscribes from the full-range raycast event.
         /// </summary>
         public virtual bool StopDataCollection()
         {

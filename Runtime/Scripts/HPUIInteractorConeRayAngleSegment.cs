@@ -7,7 +7,7 @@ using UnityEngine.XR.Hands;
 namespace ubco.ovilab.HPUI.Cone
 {
     /// <summary>
-    /// Segments of the cone estimation. Corresponds to the fields of <see cref="HPUIInteractorConeRayAngles"/>
+    /// Identifies a finger segment and side used for cone estimation. Each value corresponds to an angle list on <see cref="HPUIInteractorConeRayAngles"/>
     /// </summary>
     public enum HPUIInteractorConeRayAngleSegment
     {

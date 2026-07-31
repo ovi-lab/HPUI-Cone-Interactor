@@ -7,17 +7,17 @@ namespace ubco.ovilab.HPUI.Cone
     public interface IConeRaySegmentComputation
     {
         /// <summary>
-        /// For a given segment, computes the List of <see cref="HPUIInteractorRayAngle">.
+        /// Computes the ray angles for one cone segment from the supplied interaction records.
         /// </summary>
-        /// <param name="segment">
-        ///   The <see cref="HPUIInteractorConeRayAngleSegment"/> for which cone
-        ///   angles are being computed.
-        /// </param>
+        /// <param name="segment">The cone segment for which angles are being computed.</param>
+        /// <param name="interactionRecords">The recorded interaction data to analyze.</param>
+        /// <returns>The estimated ray angles for <paramref name="segment"/>.</returns>
         List<HPUIInteractorRayAngle> EstimateConeAnglesForSegment(HPUIInteractorConeRayAngleSegment segment, IEnumerable<ConeRayComputationDataRecord> interactionRecords);
     }
 
     /// <summary>
-    /// Holds all the data collected for a single gesture event.
+    /// Associates the raycast frames collected during one gesture with the cone segment
+    /// assigned to that gesture.
     /// </summary>
     public struct ConeRayComputationDataRecord
     {
@@ -32,10 +32,8 @@ namespace ubco.ovilab.HPUI.Cone
     }
 
     /// <summary>
-    /// Container for a list of <see cref="HPUIRayCastDetectionBaseLogic.RaycastDataRecord"/> emitted with
-    /// <see cref="HPUIRayCastDetectionBaseLogic.raycastData"/>. Also contains the closest
-    /// <see cref="FingerSide">side</see> and <see cref="XRHandJoint">joint</see>, and the time at which the
-    /// frame was collected.
+    /// Contains the raycast records collected during one frame, together with the closest
+    /// finger side, hand joint, and collection timestamp.
     /// </summary>
     public struct RaycastDataRecordsContainer
     {

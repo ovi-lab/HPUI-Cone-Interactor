@@ -9,9 +9,9 @@ using ubco.ovilab.HPUI.Core.Interaction;
 namespace ubco.ovilab.HPUI.Cone
 {
     /// <summary>
-    /// Detects which interactable is being selected with raycasts based on the the <see cref="ConeRayAngles"/>.
-    /// The cone of rays is based on the finger segment that is closest to the thumb tip.  The heuristic
-    /// assigned to the interactable is based on the number of rays that makes contact with the interactable
+    /// Detects interactables using a cone of rays configured by <see cref="ConeRayAngles"/>.
+    /// The active cone is selected from the finger segment and side closest to the thumb tip. The target ranking heuristic
+    /// is based on the number of rays that contact each interactable
     /// and the distances to it.
     /// </summary>
     [Serializable]

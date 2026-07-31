@@ -7,27 +7,15 @@ using UnityEngine;
 namespace ubco.ovilab.HPUI.Cone
 {
     /// <summary>
-    /// Computes cone ray angles for a given segment by aggregating distance samples gathered during interaction frames.
-    /// For each unique ray direction (identified by its X and Z angles) the implementation collects all selection distances
-    /// observed across the provided interaction records, filters rays that do not meet a minimum interaction frequency,
-    /// and then produces a single representative distance per ray using the configured statistical technique.
-    /// The resulting collection contains HPUIInteractorRayAngle entries (angleX, angleZ, distance) describing the cone
-    /// for the segment.
+    /// Estimates cone ray angles for a segment by aggregating recorded selection-ray distances.
     /// </summary>
     /// <remarks>
-    /// Behavior summary:
-    /// - Only rays marked as selection are considered.
-    /// - Gestures longer than LongGestureThresholdSeconds use all collected frames.
-    /// - Shorter gestures use a ShortGestureWindowSeconds window centered on the frame containing the shortest
-    ///   selection-ray distance.
-    /// - A ray must appear in at least MinRayInteractionsThreshold fraction of the selected frames to be included.
-    /// - When EstimateTechnique is Average the mean of the collected distances is used; when Percentile the configured
-    ///   Percentile (0.0-1.0) is used (interpolated percentile).
-    /// - The per-ray distance is multiplied by Multiplier before being stored in the output.
-    /// - If CullRaysByDistanceToCentroid is true, rays are further culled by their angular proximity to the centroid
-    ///   direction using CullingDistanceThresholdNormalized (1 = no culling, smaller values remove more rays).
-    /// - If interactionRecords contains no matching segment frames or no rays pass the interaction threshold the
-    ///   method returns an empty list (and emits a warning in the original implementation when appropriate).
+    /// Rays are grouped by their X and Z angles. Long gestures use all recorded frames;
+    /// shorter gestures use the configured window centered on the frame with the shortest
+    /// selection-ray distance. Rays whose observation count does not exceed the configured
+    /// interaction threshold are omitted. Remaining distances are aggregated using the
+    /// selected estimate, multiplied by <see cref="Multiplier"/>, and optionally culled
+    /// according to their angular distance from the centroid.
     /// </remarks>
     /// <seealso cref="Estimate"/>
     /// <seealso cref="LongGestureThresholdSeconds"/>
@@ -43,14 +31,12 @@ namespace ubco.ovilab.HPUI.Cone
         public enum Estimate
         {
             /// <summary>
-            /// For each ray seen during interactions, use the average
-            /// interaction distance from all the data collected.
+            /// Uses the arithmetic mean of the recorded distances for each ray.
             /// </summary>
             Average,
 
             /// <summary>
-            /// For each ray seen during interactions, get the nth
-            /// percentile distance from all the data collected.
+            /// Uses the configured interpolated percentile of the recorded distances for each ray.
             /// </summary>
             Percentile
         }
@@ -60,8 +46,11 @@ namespace ubco.ovilab.HPUI.Cone
         private float longGestureThresholdSeconds = 0.4f;
 
         /// <summary>
-        /// Gets or sets the gesture duration above which all collected frames are analyzed.
+        /// The gesture duration in seconds above which all collected
+        /// frames are analyzed. Below this threshold, a window around
+        /// the frame with the shortest selection distance is used.
         /// </summary>
+        /// <seealso cref="ShortGestureWindowSeconds"/>
         public float LongGestureThresholdSeconds
         {
             get => longGestureThresholdSeconds;
@@ -73,7 +62,9 @@ namespace ubco.ovilab.HPUI.Cone
         private float shortGestureWindowSeconds = 0.2f;
 
         /// <summary>
-        /// Gets or sets the duration of the frame window analyzed for short gestures.
+        /// For a short gesture, based on <see cref="LongGestureThresholdSeconds"/>,
+        /// the duration of the window centered on the frame with the shortest
+        /// selection distance to use for calculating the cone.
         /// </summary>
         public float ShortGestureWindowSeconds
         {
@@ -96,7 +87,7 @@ namespace ubco.ovilab.HPUI.Cone
         }
 
         [SerializeField, Range(0.01f, 1f)]
-        [Tooltip("The percentage of frames in the gesture that a ray should have been used to qualify for the final cone")]
+        [Tooltip("Minimum fraction of selected frames in which a ray must be used to qualify for the final cone.")]
         private float minRayInteractionsThreshold = 0.2f;
 
         /// <summary>
@@ -111,7 +102,7 @@ namespace ubco.ovilab.HPUI.Cone
         }
 
         [SerializeField, Range(0f, 1f)]
-        [Tooltip("When Percentile is used, get the nth percentile distance at which interactions occured for each ray")]
+        [Tooltip("Percentile of recorded distances to use when the Percentile estimate is selected.")]
         private float percentile = 0.6f;
 
         /// <summary>
@@ -154,7 +145,8 @@ namespace ubco.ovilab.HPUI.Cone
 
         /// <summary>
         /// Normalized distance from the cluster centroid used to determine when rays should be culled.
-        /// Value is in the range [0, 1]: 1 no rays are culled, 0 nearly all rays.
+        /// Values are clamped to [0.01, 1.0]. A value of 1 retains every ray; lower
+        /// values retain only rays closer to the centroid direction.
         /// </summary>
         public float CullingDistanceThresholdNormalized
         {

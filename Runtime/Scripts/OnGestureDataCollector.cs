@@ -7,8 +7,8 @@ using UnityEngine;
 namespace ubco.ovilab.HPUI.Cone
 {
     /// <summary>
-    /// Collect data for each gesture. Determines the segment for a given interaction based on the
-    /// mapping provided in <see cref="InteractableToSegmentMapping"/>.
+    /// Collects data for each gesture and assigns it to the segment configured for the
+    /// triggering interactable in <see cref="InteractableToSegmentMapping"/>.
     /// </summary>
     /// <seealso cref="IHPUIInteractable.GestureEvent"/>
     public class OnGestureDataCollector : RaycastDataCollectorBase
@@ -32,11 +32,11 @@ namespace ubco.ovilab.HPUI.Cone
         /// </summary>
         public List<ConeRayAnglesEstimationPair> InteractableToSegmentMapping { get => interactableToSegmentMapping; set => interactableToSegmentMapping = value; }
 
-        [SerializeField, Tooltip("If not true, interactableSegmentPairs should have atleast one entry for each")]
+        [SerializeField, Tooltip("When disabled, the mapping must contain at least one entry for every cone segment.")]
         private bool ignoreMissingSegments = false;
 
         /// <summary>
-        /// If not true, interactableSegmentPairs should have at least one entry for each
+        /// When disabled, the mapping is required to contain at least one entry for every cone segment.
         /// </summary>
         public bool IgnoreMissingSegments { get => ignoreMissingSegments; set => ignoreMissingSegments = value; }
 
